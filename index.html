@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>李昊天因为太喜欢陈不染了就做了一个网页给她</title>
+  <link rel="preload" href="durian.jpg" as="image">
+  <link rel="preload" href="441747730548_.pic.jpg" as="image">
+  <link rel="preload" href="451747730550_.pic.jpg" as="image">
+  <link rel="preload" href="461747730552_.pic.jpg" as="image">
+  <link rel="preload" href="471747730554_.pic.jpg" as="image">
+  <link rel="preload" href="481747730556_.pic.jpg" as="image">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');
     body {
@@ -17,9 +23,9 @@
       align-items: center;
       min-height: 100vh;
       position: relative;
-      user-select: none; /* 防止触摸时选中文字 */
+      user-select: none;
       -webkit-user-select: none;
-      touch-action: manipulation; /* 防止iOS默认手势干扰 */
+      touch-action: manipulation;
     }
     h1 {
       color: #fff;
@@ -48,8 +54,8 @@
     }
     .game-object {
       position: absolute;
-      width: 100px;
-      height: 100px;
+      width: 80px;
+      height: 80px;
       border-radius: 15px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
       transition: transform 0.1s ease;
@@ -59,11 +65,12 @@
       height: 100%;
       object-fit: cover;
       border-radius: 15px;
+      image-rendering: optimizeSpeed;
     }
     .split-container {
       position: absolute;
-      width: 100px;
-      height: 100px;
+      width: 80px;
+      height: 80px;
     }
     .split-left, .split-right {
       position: absolute;
@@ -79,6 +86,7 @@
       object-fit: cover;
       position: absolute;
       top: 0;
+      image-rendering: optimizeSpeed;
     }
     .split-left {
       left: 0;
@@ -100,13 +108,13 @@
     }
     @keyframes splitLeft {
       to {
-        transform: translateX(-50px) rotate(-15deg);
+        transform: translateX(-40px) rotate(-15deg);
         opacity: 0;
       }
     }
     @keyframes splitRight {
       to {
-        transform: translateX(50px) rotate(15deg);
+        transform: translateX(40px) rotate(15deg);
         opacity: 0;
       }
     }
@@ -128,8 +136,8 @@
         font-size: 1.5rem;
       }
       .game-object, .split-container {
-        width: 80px;
-        height: 80px;
+        width: 60px;
+        height: 60px;
       }
       .split-left, .split-right {
         width: 50%;
@@ -141,13 +149,13 @@
       }
       @keyframes splitLeft {
         to {
-          transform: translateX(-40px) rotate(-15deg);
+          transform: translateX(-30px) rotate(-15deg);
           opacity: 0;
         }
       }
       @keyframes splitRight {
         to {
-          transform: translateX(40px) rotate(15deg);
+          transform: translateX(30px) rotate(15deg);
           opacity: 0;
         }
       }
@@ -197,7 +205,6 @@
         touchTrail.push({ x: touch.clientX, y: touch.clientY });
         if (touchTrail.length > 10) touchTrail.shift();
 
-        // 显示触摸轨迹
         const trail = document.createElement('div');
         trail.className = 'trail';
         trail.style.left = touch.clientX - 5 + 'px';
@@ -222,7 +229,6 @@
         touchTrail.push({ x: e.clientX, y: e.clientY });
         if (touchTrail.length > 10) touchTrail.shift();
 
-        // 显示鼠标轨迹
         const trail = document.createElement('div');
         trail.className = 'trail';
         trail.style.left = e.clientX - 5 + 'px';
@@ -237,29 +243,23 @@
       touchTrail = [];
     });
 
-    // 生成游戏对象
-    function spawnObject() {
-      // 75%概率生成榴莲，25%概率生成照片
-      const isDurian = Math.random() < 0.75;
-      const objectData = isDurian ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
+    // 生成单个游戏对象
+    function createObject(x, y, velocityX, velocityY, objectData) {
       const object = document.createElement('div');
       object.className = 'game-object';
       object.dataset.type = objectData.type;
       const img = document.createElement('img');
       img.src = objectData.src;
       img.onerror = () => {
-        img.src = 'https://via.placeholder.com/100/FFD700/000000?text=榴莲';
+        img.src = 'https://via.placeholder.com/80/FFD700/000000?text=榴莲';
       };
       object.appendChild(img);
       gameArea.appendChild(object);
 
-      // 初始位置和速度（再减半）
-      const startX = Math.random() * (window.innerWidth - 100);
-      let x = startX;
-      let y = window.innerHeight;
-      const velocityX = (Math.random() - 0.5) * 1;  // 水平速度减半
-      const velocityY = -4 - Math.random() * 1.5;  // 上升速度减半
-      const gravity = 0.1;                         // 重力加速度减半
+      object.style.left = x + 'px';
+      object.style.top = y + 'px';
+
+      const gravity = 0.1;
 
       function update() {
         y += velocityY;
@@ -267,12 +267,10 @@
         object.style.left = x + 'px';
         object.style.top = y + 'px';
 
-        // 应用重力
         object.velocityY = (object.velocityY || velocityY) + gravity;
         y += object.velocityY;
         x += velocityX;
 
-        // 检测是否被切中
         const rect = object.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
@@ -282,14 +280,13 @@
           const p1 = touchTrail[i - 1];
           const p2 = touchTrail[i];
           const dist = pointToLineDistance(centerX, centerY, p1.x, p1.y, p2.x, p2.y);
-          if (dist < 50) {
+          if (dist < 40) {
             hit = true;
             break;
           }
         }
 
         if (hit) {
-          // 切开特效
           const splitContainer = document.createElement('div');
           splitContainer.className = 'split-container';
           splitContainer.style.left = x + 'px';
@@ -311,7 +308,6 @@
           splitContainer.appendChild(splitLeft);
           splitContainer.appendChild(splitRight);
 
-          // 播放音效并更新分数
           if (objectData.type === 'durian') {
             score += 10;
             cutDurianSound.currentTime = 0;
@@ -327,8 +323,7 @@
           return;
         }
 
-        // 超出屏幕移除
-        if (y > window.innerHeight || x < -100 || x > window.innerWidth) {
+        if (y > window.innerHeight || x < -80 || x > window.innerWidth) {
           object.remove();
           return;
         }
@@ -337,6 +332,120 @@
       }
 
       update();
+    }
+
+    // 10种出现模式
+    const spawnPatterns = [
+      // 1. 水平单排
+      () => {
+        const count = Math.floor(Math.random() * 3) + 3; // 3-5个
+        const startX = Math.random() * (window.innerWidth - count * 100);
+        for (let i = 0; i < count; i++) {
+          const objectData = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
+          createObject(startX + i * 100, window.innerHeight, (Math.random() - 0.5) * 1, -4 - Math.random() * 1.5, objectData);
+        }
+      },
+      // 2. 垂直单排
+      () => {
+        const count = Math.floor(Math.random() * 3) + 2; // 2-4个
+        const startY = window.innerHeight - count * 100;
+        for (let i = 0; i < count; i++) {
+          const objectData = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
+          createObject(0, startY + i * 100, 2 + Math.random() * 1, 0, objectData);
+        }
+      },
+      // 3. 波浪形
+      () => {
+        const count = Math.floor(Math.random() * 3) + 3;
+        const startX = Math.random() * (window.innerWidth - count * 100);
+        for (let i = 0; i < count; i++) {
+          const objectData = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
+          const offsetY = Math.sin(i * 0.5) * 50;
+          createObject(startX + i * 100, window.innerHeight + offsetY, (Math.random() - 0.5) * 1, -4 - Math.random() * 1.5, objectData);
+        }
+      },
+      // 4. 对角线（左下到右上）
+      () => {
+        const count = Math.floor(Math.random() * 3) + 2;
+        for (let i = 0; i < count; i++) {
+          const objectData = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
+          createObject(i * 150, window.innerHeight - i * 100, 1 + Math.random() * 0.5, -3 - Math.random() * 1, objectData);
+        }
+      },
+      // 5. 反向对角线（右下到左上）
+      () => {
+        const count = Math.floor(Math.random() * 3) + 2;
+        for (let i = 0; i < count; i++) {
+          const objectData = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
+          createObject(window.innerWidth - i * 150, window.innerHeight - i * 100, -1 - Math.random() * 0.5, -3 - Math.random() * 1, objectData);
+        }
+      },
+      // 6. 圆形排列
+      () => {
+        const count = Math.floor(Math.random() * 3) + 3;
+        const centerX = window.innerWidth / 2;
+        const centerY = window.innerHeight;
+        const radius = 100;
+        for (let i = 0; i < count; i++) {
+          const angle = (i / count) * 2 * Math.PI;
+          const x = centerX + radius * Math.cos(angle);
+          const y = centerY + radius * Math.sin(angle);
+          const objectData = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
+          createObject(x, y, (Math.random() - 0.5) * 1, -4 - Math.random() * 1.5, objectData);
+        }
+      },
+      // 7. 双排水平
+      () => {
+        const count = Math.floor(Math.random() * 2) + 2;
+        const startX = Math.random() * (window.innerWidth - count * 100);
+        for (let i = 0; i < count; i++) {
+          const objectData1 = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
+          const objectData2 = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
+          createObject(startX + i * 100, window.innerHeight, (Math.random() - 0.5) * 1, -4 - Math.random() * 1.5, objectData1);
+          createObject(startX + i * 100 + 50, window.innerHeight - 80, (Math.random() - 0.5) * 1, -4 - Math.random() * 1.5, objectData2);
+        }
+      },
+      // 8. 双排垂直
+      () => {
+        const count = Math.floor(Math.random() * 2) + 2;
+        const startY = window.innerHeight - count * 100;
+        for (let i = 0; i < count; i++) {
+          const objectData1 = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
+          const objectData2 = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
+          createObject(0, startY + i * 100, 2 + Math.random() * 1, 0, objectData1);
+          createObject(80, startY + i * 100 + 50, 2 + Math.random() * 1, 0, objectData2);
+        }
+      },
+      // 9. 随机散布
+      () => {
+        const count = Math.floor(Math.random() * 3) + 3;
+        for (let i = 0; i < count; i++) {
+          const objectData = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
+          const x = Math.random() * (window.innerWidth - 80);
+          createObject(x, window.innerHeight, (Math.random() - 0.5) * 1, -4 - Math.random() * 1.5, objectData);
+        }
+      },
+      // 10. 三角形排列
+      () => {
+        const count = 3;
+        const startX = Math.random() * (window.innerWidth - 200);
+        const positions = [
+          { x: startX + 100, y: window.innerHeight }, // 底部中心
+          { x: startX, y: window.innerHeight - 100 }, // 左上
+          { x: startX + 200, y: window.innerHeight - 100 }, // 右上
+        ];
+        positions.forEach(pos => {
+          const objectData = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
+          createObject(pos.x, pos.y, (Math.random() - 0.5) * 1, -4 - Math.random() * 1.5, objectData);
+        });
+      }
+    ];
+
+    // 定期生成对象
+    function spawnObjects() {
+      const patternIndex = Math.floor(Math.random() * spawnPatterns.length);
+      spawnPatterns[patternIndex]();
+      setTimeout(spawnObjects, 2000 + Math.random() * 2000);
     }
 
     // 计算点到线段的距离
@@ -367,11 +476,8 @@
       return Math.sqrt(dx * dx + dy * dy);
     }
 
-    // 定期生成对象
-    setInterval(spawnObject, 1500 + Math.random() * 1500);
-
     // 初始生成
-    spawnObject();
+    spawnObjects();
   </script>
 </body>
 </html>

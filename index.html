@@ -71,7 +71,7 @@
       border-radius: 15px;
       image-rendering: optimizeSpeed;
     }
-    /* 旋转动画，动态设置持续时间 */
+    /* 旋转动画，更新为指定速度 */
     .rotate-fast { animation: rotate 6s linear infinite; }
     .rotate-medium { animation: rotate 9s linear infinite; }
     .rotate-slow { animation: rotate 12s linear infinite; }
@@ -272,27 +272,6 @@
     let isTouching = false;
     let isGameOver = false;
 
-    // 预加载所有图片
-    function preloadImages(imageUrls) {
-      return Promise.all(
-        imageUrls.map(url => new Promise((resolve, reject) => {
-          const img = new Image();
-          img.src = url;
-          img.onload = () => resolve(img);
-          img.onerror = () => {
-            console.warn(`Failed to preload image: ${url}`);
-            resolve(null); // 即使加载失败也继续
-          };
-        }))
-      );
-    }
-
-    // 图片列表
-    const imageUrls = [
-      ...durians.map(item => item.src),
-      ...photos.map(item => item.src)
-    ];
-
     // 动态调整得分显示位置
     function adjustScorePosition() {
       const title = document.querySelector('h1');
@@ -322,7 +301,7 @@
     }
 
     // 触摸事件
-    document.addEventListener('touchstart', (e) => {
+    document.addEventListener('touchrape touchstart', (e) => {
       e.preventDefault();
       if (isGameOver) return;
       isTouching = true;
@@ -413,14 +392,11 @@
           return;
         }
 
-        y += velocityY;
-        x += velocityX;
-        object.style.left = x + 'px';
-        object.style.top = y + 'px';
-
         object.velocityY = (object.velocityY || velocityY) + gravity;
         y += object.velocityY;
         x += velocityX;
+        object.style.left = x + 'px';
+        object.style.top = y + 'px';
 
         const rect = object.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
@@ -590,7 +566,7 @@
       () => {
         const count = Math.floor(Math.random() * 3) + 2;
         for (let i = 0; i < count; i++) {
-          const objectData = Math.random() < 0.75 ? duration[0] : photos[Math.floor(Math.random() * photos.length)];
+          const objectData = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
           createObject(3 * window.innerWidth / 4 - 30, window.innerHeight + i * 80, 0, -4 - Math.random() * 1.5, objectData);
         }
       }
@@ -632,15 +608,9 @@
       return Math.sqrt(dx * dx + dy * dy);
     }
 
-    // 初始化游戏
-    async function initGame() {
-      await preloadImages(imageUrls);
-      updateScoreColor(score);
-      spawnObjects();
-    }
-
-    // 启动游戏
-    initGame();
+    // 初始生成
+    updateScoreColor(score);
+    spawnObjects();
   </script>
 </body>
 </html>

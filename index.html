@@ -71,6 +71,14 @@
       border-radius: 15px;
       image-rendering: optimizeSpeed;
     }
+    /* 旋转动画，动态设置持续时间 */
+    .rotate-fast { animation: rotate 6s linear infinite; }
+    .rotate-medium { animation: rotate 9s linear infinite; }
+    .rotate-slow { animation: rotate 12s linear infinite; }
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
     .split-container {
       position: absolute;
       width: 60px;
@@ -264,6 +272,27 @@
     let isTouching = false;
     let isGameOver = false;
 
+    // 预加载所有图片
+    function preloadImages(imageUrls) {
+      return Promise.all(
+        imageUrls.map(url => new Promise((resolve, reject) => {
+          const img = new Image();
+          img.src = url;
+          img.onload = () => resolve(img);
+          img.onerror = () => {
+            console.warn(`Failed to preload image: ${url}`);
+            resolve(null); // 即使加载失败也继续
+          };
+        }))
+      );
+    }
+
+    // 图片列表
+    const imageUrls = [
+      ...durians.map(item => item.src),
+      ...photos.map(item => item.src)
+    ];
+
     // 动态调整得分显示位置
     function adjustScorePosition() {
       const title = document.querySelector('h1');
@@ -363,6 +392,16 @@
       object.appendChild(img);
       gameArea.appendChild(object);
 
+      // 根据初始垂直速度设置旋转速度
+      const absVelocityY = Math.abs(velocityY);
+      if (absVelocityY > 5) {
+        object.classList.add('rotate-fast');
+      } else if (absVelocityY > 4) {
+        object.classList.add('rotate-medium');
+      } else {
+        object.classList.add('rotate-slow');
+      }
+
       object.style.left = x + 'px';
       object.style.top = y + 'px';
 
@@ -429,7 +468,7 @@
             cutPhotoSound.currentTime = 0;
             cutPhotoSound.play();
           }
-          score = Math.max(0, score); // 防止负分
+          score = Math.max(0, score);
           scoreDisplay.textContent = `得分: ${score}`;
           updateScoreColor(score);
           object.remove();
@@ -551,7 +590,7 @@
       () => {
         const count = Math.floor(Math.random() * 3) + 2;
         for (let i = 0; i < count; i++) {
-          const objectData = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
+          const objectData = Math.random() < 0.75 ? duration[0] : photos[Math.floor(Math.random() * photos.length)];
           createObject(3 * window.innerWidth / 4 - 30, window.innerHeight + i * 80, 0, -4 - Math.random() * 1.5, objectData);
         }
       }
@@ -593,9 +632,15 @@
       return Math.sqrt(dx * dx + dy * dy);
     }
 
-    // 初始生成
-    updateScoreColor(score); // 初始化得分颜色
-    spawnObjects();
+    // 初始化游戏
+    async function initGame() {
+      await preloadImages(imageUrls);
+      updateScoreColor(score);
+      spawnObjects();
+    }
+
+    // 启动游戏
+    initGame();
   </script>
 </body>
 </html>

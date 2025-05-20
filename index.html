@@ -17,6 +17,9 @@
       align-items: center;
       min-height: 100vh;
       position: relative;
+      user-select: none; /* 防止触摸时选中文字 */
+      -webkit-user-select: none;
+      touch-action: manipulation; /* 防止iOS默认手势干扰 */
     }
     h1 {
       color: #fff;
@@ -176,23 +179,50 @@
     const cutDurianSound = document.getElementById('cutDurianSound');
     const cutPhotoSound = document.getElementById('cutPhotoSound');
     let score = 0;
-    let mouseTrail = [];
-    let isMouseDown = false;
+    let touchTrail = [];
+    let isTouching = false;
 
-    // 鼠标拖动轨迹
+    // 触摸事件
+    document.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      isTouching = true;
+      const touch = e.touches[0];
+      touchTrail = [{ x: touch.clientX, y: touch.clientY }];
+    });
+
+    document.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (isTouching) {
+        const touch = e.touches[0];
+        touchTrail.push({ x: touch.clientX, y: touch.clientY });
+        if (touchTrail.length > 10) touchTrail.shift();
+
+        // 显示触摸轨迹
+        const trail = document.createElement('div');
+        trail.className = 'trail';
+        trail.style.left = touch.clientX - 5 + 'px';
+        trail.style.top = touch.clientY - 5 + 'px';
+        gameArea.appendChild(trail);
+        setTimeout(() => trail.remove(), 200);
+      }
+    });
+
+    document.addEventListener('touchend', () => {
+      isTouching = false;
+      touchTrail = [];
+    });
+
+    // 鼠标事件（PC兼容）
     document.addEventListener('mousedown', () => {
-      isMouseDown = true;
+      isTouching = true;
     });
-    document.addEventListener('mouseup', () => {
-      isMouseDown = false;
-      mouseTrail = [];
-    });
-    document.addEventListener('mousemove', (e) => {
-      if (isMouseDown) {
-        mouseTrail.push({ x: e.clientX, y: e.clientY });
-        if (mouseTrail.length > 10) mouseTrail.shift();
 
-        // 显示拖动轨迹
+    document.addEventListener('mousemove', (e) => {
+      if (isTouching) {
+        touchTrail.push({ x: e.clientX, y: e.clientY });
+        if (touchTrail.length > 10) touchTrail.shift();
+
+        // 显示鼠标轨迹
         const trail = document.createElement('div');
         trail.className = 'trail';
         trail.style.left = e.clientX - 5 + 'px';
@@ -200,6 +230,11 @@
         gameArea.appendChild(trail);
         setTimeout(() => trail.remove(), 200);
       }
+    });
+
+    document.addEventListener('mouseup', () => {
+      isTouching = false;
+      touchTrail = [];
     });
 
     // 生成游戏对象
@@ -218,13 +253,13 @@
       object.appendChild(img);
       gameArea.appendChild(object);
 
-      // 初始位置和速度（放慢）
+      // 初始位置和速度（再减半）
       const startX = Math.random() * (window.innerWidth - 100);
       let x = startX;
       let y = window.innerHeight;
-      const velocityX = (Math.random() - 0.5) * 2; // 降低水平速度
-      const velocityY = -8 - Math.random() * 3;   // 降低初始上升速度
-      const gravity = 0.2;                        // 降低重力加速度
+      const velocityX = (Math.random() - 0.5) * 1;  // 水平速度减半
+      const velocityY = -4 - Math.random() * 1.5;  // 上升速度减半
+      const gravity = 0.1;                         // 重力加速度减半
 
       function update() {
         y += velocityY;
@@ -243,9 +278,9 @@
         const centerY = rect.top + rect.height / 2;
         let hit = false;
 
-        for (let i = 1; i < mouseTrail.length; i++) {
-          const p1 = mouseTrail[i - 1];
-          const p2 = mouseTrail[i];
+        for (let i = 1; i < touchTrail.length; i++) {
+          const p1 = touchTrail[i - 1];
+          const p2 = touchTrail[i];
           const dist = pointToLineDistance(centerX, centerY, p1.x, p1.y, p2.x, p2.y);
           if (dist < 50) {
             hit = true;

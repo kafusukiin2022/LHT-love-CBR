@@ -29,19 +29,19 @@
     }
     h1 {
       color: #fff;
-      font-size: 3.5rem;
+      font-size: 2.5rem;
       text-align: center;
-      margin: 1rem 0;
+      margin: 0.5rem 0;
       text-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
       z-index: 10;
     }
     .score {
       position: fixed;
-      top: 80px;
+      top: 60px;
       left: 50%;
       transform: translateX(-50%);
       color: #fff;
-      font-size: 2rem;
+      font-size: 1.5rem;
       text-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
       z-index: 10;
     }
@@ -54,8 +54,8 @@
     }
     .game-object {
       position: absolute;
-      width: 80px;
-      height: 80px;
+      width: 60px;
+      height: 60px;
       border-radius: 15px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
       transition: transform 0.1s ease;
@@ -69,8 +69,8 @@
     }
     .split-container {
       position: absolute;
-      width: 80px;
-      height: 80px;
+      width: 60px;
+      height: 60px;
     }
     .split-left, .split-right {
       position: absolute;
@@ -108,13 +108,13 @@
     }
     @keyframes splitLeft {
       to {
-        transform: translateX(-40px) rotate(-15deg);
+        transform: translateX(-30px) rotate(-15deg);
         opacity: 0;
       }
     }
     @keyframes splitRight {
       to {
-        transform: translateX(40px) rotate(15deg);
+        transform: translateX(30px) rotate(15deg);
         opacity: 0;
       }
     }
@@ -127,17 +127,67 @@
       pointer-events: none;
       opacity: 0.7;
     }
-    @media (max-width: 600px) {
+    .end-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 20;
+    }
+    .end-text {
+      font-size: 2.5rem;
+      color: #ff4d94;
+      text-shadow: 3px 3px 5px #000, -3px -3px 5px #fff;
+      animation: colorBounce 2s infinite;
+    }
+    .heart {
+      width: 100px;
+      height: 90px;
+      position: relative;
+      margin-top: 20px;
+      animation: heartbeat 1s infinite;
+    }
+    .heart::before,
+    .heart::after {
+      content: '';
+      position: absolute;
+      width: 70px;
+      height: 110px;
+      background: #ff4d94;
+      border-radius: 50px 50px 0 0;
+      transform: rotate(-45deg);
+      left: 0;
+    }
+    .heart::after {
+      transform: rotate(45deg);
+      left: 30px;
+    }
+    @keyframes colorBounce {
+      0%, 100% { color: #ff4d94; transform: scale(1); }
+      50% { color: #ff99cc; transform: scale(1.1); }
+    }
+    @keyframes heartbeat {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+    @media (max-aspect-ratio: 1/1) {
       h1 {
-        font-size: 2rem;
+        font-size: 1.8rem;
+        margin: 0.3rem 0;
       }
       .score {
-        top: 60px;
-        font-size: 1.5rem;
+        top: 40px;
+        font-size: 1.2rem;
       }
       .game-object, .split-container {
-        width: 60px;
-        height: 60px;
+        width: 50px;
+        height: 50px;
       }
       .split-left, .split-right {
         width: 50%;
@@ -149,15 +199,30 @@
       }
       @keyframes splitLeft {
         to {
-          transform: translateX(-30px) rotate(-15deg);
+          transform: translateX(-25px) rotate(-15deg);
           opacity: 0;
         }
       }
       @keyframes splitRight {
         to {
-          transform: translateX(30px) rotate(15deg);
+          transform: translateX(25px) rotate(15deg);
           opacity: 0;
         }
+      }
+      .end-text {
+        font-size: 1.8rem;
+      }
+      .heart {
+        width: 80px;
+        height: 72px;
+      }
+      .heart::before,
+      .heart::after {
+        width: 56px;
+        height: 88px;
+      }
+      .heart::after {
+        left: 24px;
       }
     }
   </style>
@@ -166,6 +231,10 @@
   <h1>李昊天因为太喜欢陈不染了就做了一个网页给她</h1>
   <div class="score" id="score">得分: 0</div>
   <div class="game-area" id="gameArea"></div>
+  <div class="end-screen" id="endScreen">
+    <div class="end-text">宝宝我爱你,520快乐</div>
+    <div class="heart"></div>
+  </div>
   <audio id="cutDurianSound" src="https://cdn.pixabay.com/audio/2023/01/31/audio_3e768a37b0.mp3"></audio>
   <audio id="cutPhotoSound" src="https://cdn.pixabay.com/audio/2023/01/31/audio_1f5e7a8b2c.mp3"></audio>
 
@@ -184,15 +253,18 @@
 
     const gameArea = document.getElementById('gameArea');
     const scoreDisplay = document.getElementById('score');
+    const endScreen = document.getElementById('endScreen');
     const cutDurianSound = document.getElementById('cutDurianSound');
     const cutPhotoSound = document.getElementById('cutPhotoSound');
     let score = 0;
     let touchTrail = [];
     let isTouching = false;
+    let isGameOver = false;
 
     // 触摸事件
     document.addEventListener('touchstart', (e) => {
       e.preventDefault();
+      if (isGameOver) return;
       isTouching = true;
       const touch = e.touches[0];
       touchTrail = [{ x: touch.clientX, y: touch.clientY }];
@@ -200,6 +272,7 @@
 
     document.addEventListener('touchmove', (e) => {
       e.preventDefault();
+      if (isGameOver) return;
       if (isTouching) {
         const touch = e.touches[0];
         touchTrail.push({ x: touch.clientX, y: touch.clientY });
@@ -221,10 +294,12 @@
 
     // 鼠标事件（PC兼容）
     document.addEventListener('mousedown', () => {
+      if (isGameOver) return;
       isTouching = true;
     });
 
     document.addEventListener('mousemove', (e) => {
+      if (isGameOver) return;
       if (isTouching) {
         touchTrail.push({ x: e.clientX, y: e.clientY });
         if (touchTrail.length > 10) touchTrail.shift();
@@ -251,7 +326,7 @@
       const img = document.createElement('img');
       img.src = objectData.src;
       img.onerror = () => {
-        img.src = 'https://via.placeholder.com/80/FFD700/000000?text=榴莲';
+        img.src = 'https://via.placeholder.com/60/FFD700/000000?text=榴莲';
       };
       object.appendChild(img);
       gameArea.appendChild(object);
@@ -262,6 +337,11 @@
       const gravity = 0.1;
 
       function update() {
+        if (isGameOver) {
+          object.remove();
+          return;
+        }
+
         y += velocityY;
         x += velocityX;
         object.style.left = x + 'px';
@@ -280,7 +360,7 @@
           const p1 = touchTrail[i - 1];
           const p2 = touchTrail[i];
           const dist = pointToLineDistance(centerX, centerY, p1.x, p1.y, p2.x, p2.y);
-          if (dist < 40) {
+          if (dist < 30) {
             hit = true;
             break;
           }
@@ -320,10 +400,18 @@
           scoreDisplay.textContent = `得分: ${score}`;
           object.remove();
           setTimeout(() => splitContainer.remove(), 500);
+
+          if (score >= 100) {
+            isGameOver = true;
+            setTimeout(() => {
+              endScreen.style.display = 'flex';
+              scoreDisplay.style.display = 'none';
+            }, 500);
+          }
           return;
         }
 
-        if (y > window.innerHeight || x < -80 || x > window.innerWidth) {
+        if (y > window.innerHeight || x < -60 || x > window.innerWidth) {
           object.remove();
           return;
         }
@@ -334,115 +422,110 @@
       update();
     }
 
-    // 10种出现模式
+    // 10种纵向出现模式
     const spawnPatterns = [
-      // 1. 水平单排
+      // 1. 单列上升（从底部中心）
       () => {
-        const count = Math.floor(Math.random() * 3) + 3; // 3-5个
-        const startX = Math.random() * (window.innerWidth - count * 100);
+        const count = Math.floor(Math.random() * 3) + 2;
+        const startX = window.innerWidth / 2 - 30;
         for (let i = 0; i < count; i++) {
           const objectData = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
-          createObject(startX + i * 100, window.innerHeight, (Math.random() - 0.5) * 1, -4 - Math.random() * 1.5, objectData);
+          createObject(startX, window.innerHeight + i * 80, 0, -4 - Math.random() * 1.5, objectData);
         }
       },
-      // 2. 垂直单排
-      () => {
-        const count = Math.floor(Math.random() * 3) + 2; // 2-4个
-        const startY = window.innerHeight - count * 100;
-        for (let i = 0; i < count; i++) {
-          const objectData = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
-          createObject(0, startY + i * 100, 2 + Math.random() * 1, 0, objectData);
-        }
-      },
-      // 3. 波浪形
+      // 2. 左右交替上升
       () => {
         const count = Math.floor(Math.random() * 3) + 3;
-        const startX = Math.random() * (window.innerWidth - count * 100);
         for (let i = 0; i < count; i++) {
           const objectData = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
-          const offsetY = Math.sin(i * 0.5) * 50;
-          createObject(startX + i * 100, window.innerHeight + offsetY, (Math.random() - 0.5) * 1, -4 - Math.random() * 1.5, objectData);
+          const x = i % 2 === 0 ? window.innerWidth / 3 : 2 * window.innerWidth / 3;
+          createObject(x - 30, window.innerHeight + i * 60, 0, -4 - Math.random() * 1.5, objectData);
         }
       },
-      // 4. 对角线（左下到右上）
-      () => {
-        const count = Math.floor(Math.random() * 3) + 2;
-        for (let i = 0; i < count; i++) {
-          const objectData = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
-          createObject(i * 150, window.innerHeight - i * 100, 1 + Math.random() * 0.5, -3 - Math.random() * 1, objectData);
-        }
-      },
-      // 5. 反向对角线（右下到左上）
-      () => {
-        const count = Math.floor(Math.random() * 3) + 2;
-        for (let i = 0; i < count; i++) {
-          const objectData = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
-          createObject(window.innerWidth - i * 150, window.innerHeight - i * 100, -1 - Math.random() * 0.5, -3 - Math.random() * 1, objectData);
-        }
-      },
-      // 6. 圆形排列
+      // 3. 螺旋上升
       () => {
         const count = Math.floor(Math.random() * 3) + 3;
         const centerX = window.innerWidth / 2;
-        const centerY = window.innerHeight;
-        const radius = 100;
         for (let i = 0; i < count; i++) {
-          const angle = (i / count) * 2 * Math.PI;
-          const x = centerX + radius * Math.cos(angle);
-          const y = centerY + radius * Math.sin(angle);
           const objectData = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
-          createObject(x, y, (Math.random() - 0.5) * 1, -4 - Math.random() * 1.5, objectData);
+          const angle = i * 0.5;
+          const x = centerX + Math.sin(angle) * 50;
+          createObject(x - 30, window.innerHeight + i * 60, Math.cos(angle) * 0.5, -4 - Math.random() * 1.5, objectData);
         }
       },
-      // 7. 双排水平
-      () => {
-        const count = Math.floor(Math.random() * 2) + 2;
-        const startX = Math.random() * (window.innerWidth - count * 100);
-        for (let i = 0; i < count; i++) {
-          const objectData1 = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
-          const objectData2 = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
-          createObject(startX + i * 100, window.innerHeight, (Math.random() - 0.5) * 1, -4 - Math.random() * 1.5, objectData1);
-          createObject(startX + i * 100 + 50, window.innerHeight - 80, (Math.random() - 0.5) * 1, -4 - Math.random() * 1.5, objectData2);
-        }
-      },
-      // 8. 双排垂直
-      () => {
-        const count = Math.floor(Math.random() * 2) + 2;
-        const startY = window.innerHeight - count * 100;
-        for (let i = 0; i < count; i++) {
-          const objectData1 = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
-          const objectData2 = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
-          createObject(0, startY + i * 100, 2 + Math.random() * 1, 0, objectData1);
-          createObject(80, startY + i * 100 + 50, 2 + Math.random() * 1, 0, objectData2);
-        }
-      },
-      // 9. 随机散布
+      // 4. 随机纵向散布
       () => {
         const count = Math.floor(Math.random() * 3) + 3;
         for (let i = 0; i < count; i++) {
           const objectData = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
-          const x = Math.random() * (window.innerWidth - 80);
-          createObject(x, window.innerHeight, (Math.random() - 0.5) * 1, -4 - Math.random() * 1.5, objectData);
+          const x = Math.random() * (window.innerWidth - 60);
+          createObject(x, window.innerHeight + i * 80, 0, -4 - Math.random() * 1.5, objectData);
         }
       },
-      // 10. 三角形排列
+      // 5. Z字形上升
+      () => {
+        const count = Math.floor(Math.random() * 3) + 3;
+        for (let i = 0; i < count; i++) {
+          const objectData = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
+          const x = i % 3 === 0 ? window.innerWidth / 4 : (i % 3 === 1 ? 3 * window.innerWidth / 4 : window.innerWidth / 2);
+          createObject(x - 30, window.innerHeight + i * 60, 0, -4 - Math.random() * 1.5, objectData);
+        }
+      },
+      // 6. 中心扩散
+      () => {
+        const count = Math.floor(Math.random() * 3) + 2;
+        const centerX = window.innerWidth / 2;
+        for (let i = 0; i < count; i++) {
+          const objectData = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
+          const offsetX = (i % 2 === 0 ? 1 : -1) * (i + 1) * 30;
+          createObject(centerX + offsetX - 30, window.innerHeight + i * 60, offsetX * 0.02, -4 - Math.random() * 1.5, objectData);
+        }
+      },
+      // 7. 双排垂直（左右错开）
+      () => {
+        const count = Math.floor(Math.random() * 2) + 2;
+        for (let i = 0; i < count; i++) {
+          const objectData1 = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
+          const objectData2 = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
+          createObject(window.innerWidth / 3 - 30, window.innerHeight + i * 100, 0, -4 - Math.random() * 1.5, objectData1);
+          createObject(2 * window.innerWidth / 3 - 30, window.innerHeight + i * 100 + 50, 0, -4 - Math.random() * 1.5, objectData2);
+        }
+      },
+      // 8. 三角形排列（纵向）
       () => {
         const count = 3;
-        const startX = Math.random() * (window.innerWidth - 200);
+        const startX = window.innerWidth / 2 - 30;
         const positions = [
-          { x: startX + 100, y: window.innerHeight }, // 底部中心
-          { x: startX, y: window.innerHeight - 100 }, // 左上
-          { x: startX + 200, y: window.innerHeight - 100 }, // 右上
+          { x: startX, y: window.innerHeight },
+          { x: startX - 50, y: window.innerHeight - 80 },
+          { x: startX + 50, y: window.innerHeight - 80 },
         ];
         positions.forEach(pos => {
           const objectData = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
-          createObject(pos.x, pos.y, (Math.random() - 0.5) * 1, -4 - Math.random() * 1.5, objectData);
+          createObject(pos.x, pos.y, 0, -4 - Math.random() * 1.5, objectData);
         });
+      },
+      // 9. 左侧单列
+      () => {
+        const count = Math.floor(Math.random() * 3) + 2;
+        for (let i = 0; i < count; i++) {
+          const objectData = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
+          createObject(window.innerWidth / 4 - 30, window.innerHeight + i * 80, 0, -4 - Math.random() * 1.5, objectData);
+        }
+      },
+      // 10. 右侧单列
+      () => {
+        const count = Math.floor(Math.random() * 3) + 2;
+        for (let i = 0; i < count; i++) {
+          const objectData = Math.random() < 0.75 ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
+          createObject(3 * window.innerWidth / 4 - 30, window.innerHeight + i * 80, 0, -4 - Math.random() * 1.5, objectData);
+        }
       }
     ];
 
     // 定期生成对象
     function spawnObjects() {
+      if (isGameOver) return;
       const patternIndex = Math.floor(Math.random() * spawnPatterns.length);
       spawnPatterns[patternIndex]();
       setTimeout(spawnObjects, 2000 + Math.random() * 2000);

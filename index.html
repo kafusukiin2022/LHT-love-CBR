@@ -37,14 +37,18 @@
     }
     .score {
       position: fixed;
-      top: 60px;
       left: 50%;
       transform: translateX(-50%);
-      color: #fff;
       font-size: 1.5rem;
       text-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
       z-index: 10;
+      animation: heartbeat 1s infinite;
     }
+    .score-color-1 { color: #FF4D4D; } /* 0-20: 红色 */
+    .score-color-2 { color: #FF8C00; } /* 21-40: 橙色 */
+    .score-color-3 { color: #FFFF00; } /* 41-60: 黄色 */
+    .score-color-4 { color: #00FF00; } /* 61-80: 绿色 */
+    .score-color-5 { color: #00B7EB; } /* 81-100: 青色 */
     .game-area {
       position: absolute;
       width: 100%;
@@ -182,7 +186,6 @@
         margin: 0.3rem 0;
       }
       .score {
-        top: 40px;
         font-size: 1.2rem;
       }
       .game-object, .split-container {
@@ -261,6 +264,34 @@
     let isTouching = false;
     let isGameOver = false;
 
+    // 动态调整得分显示位置
+    function adjustScorePosition() {
+      const title = document.querySelector('h1');
+      const scoreElement = document.getElementById('score');
+      const titleHeight = title.offsetHeight;
+      scoreElement.style.top = `${titleHeight + 20}px`;
+    }
+
+    window.addEventListener('load', adjustScorePosition);
+    window.addEventListener('resize', adjustScorePosition);
+
+    // 更新得分颜色
+    function updateScoreColor(score) {
+      const scoreElement = document.getElementById('score');
+      scoreElement.classList.remove('score-color-1', 'score-color-2', 'score-color-3', 'score-color-4', 'score-color-5');
+      if (score <= 20) {
+        scoreElement.classList.add('score-color-1');
+      } else if (score <= 40) {
+        scoreElement.classList.add('score-color-2');
+      } else if (score <= 60) {
+        scoreElement.classList.add('score-color-3');
+      } else if (score <= 80) {
+        scoreElement.classList.add('score-color-4');
+      } else {
+        scoreElement.classList.add('score-color-5');
+      }
+    }
+
     // 触摸事件
     document.addEventListener('touchstart', (e) => {
       e.preventDefault();
@@ -326,7 +357,8 @@
       const img = document.createElement('img');
       img.src = objectData.src;
       img.onerror = () => {
-        img.src = 'https://via.placeholder.com/60/FFD700/000000?text=榴莲';
+        img.src = 'https://via.placeholder.com/60/FFD700/000000?text=加载失败';
+        console.warn(`Failed to load image: ${objectData.src}`);
       };
       object.appendChild(img);
       gameArea.appendChild(object);
@@ -397,7 +429,9 @@
             cutPhotoSound.currentTime = 0;
             cutPhotoSound.play();
           }
+          score = Math.max(0, score); // 防止负分
           scoreDisplay.textContent = `得分: ${score}`;
+          updateScoreColor(score);
           object.remove();
           setTimeout(() => splitContainer.remove(), 500);
 
@@ -560,6 +594,7 @@
     }
 
     // 初始生成
+    updateScoreColor(score); // 初始化得分颜色
     spawnObjects();
   </script>
 </body>

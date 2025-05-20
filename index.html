@@ -9,8 +9,7 @@
     body {
       margin: 0;
       padding: 0;
-      background: url('https://www.transparenttextures.com/patterns/hearts.png'), linear-gradient(135deg, #ff99cc, #ff4d94);
-      background-size: cover, 100%;
+      background: linear-gradient(135deg, #A3BFFA, #667EEA);
       font-family: 'Dancing Script', cursive;
       overflow: hidden;
       display: flex;
@@ -24,199 +23,320 @@
       font-size: 3.5rem;
       text-align: center;
       margin: 1rem 0;
-      text-shadow: 0 0 10px rgba(255, 77, 148, 0.8), 0 0 20px rgba(255, 153, 204, 0.5);
-      animation: heartbeat 1.2s infinite ease-in-out;
+      text-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
       z-index: 10;
     }
-    .photo-wall {
+    .score {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #fff;
+      font-size: 2rem;
+      text-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+      z-index: 10;
+    }
+    .game-area {
       position: absolute;
       width: 100%;
       height: 100%;
       top: 0;
       left: 0;
     }
-    .photo-container {
+    .game-object {
       position: absolute;
-      width: 30vw;
-      height: 30vw;
-      max-width: 320px;
-      max-height: 320px;
-      min-width: 240px;
-      min-height: 240px;
-      perspective: 1000px;
-      cursor: pointer;
+      width: 100px;
+      height: 100px;
+      border-radius: 15px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      transition: transform 0.1s ease;
     }
-    .photo {
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      backface-visibility: hidden;
-      transition: transform 0.6s;
-      border-radius: 20px;
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-    }
-    .front img {
+    .game-object img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      border-radius: 20px;
+      border-radius: 15px;
     }
-    .back {
-      transform: rotateY(180deg);
+    .split-container {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+    }
+    .split-left, .split-right {
+      position: absolute;
+      width: 50%;
+      height: 100%;
+      overflow: hidden;
+      border-radius: 15px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+    .split-left img, .split-right img {
+      width: 200%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      top: 0;
+    }
+    .split-left {
+      left: 0;
+      animation: splitLeft 0.5s ease forwards;
+    }
+    .split-right {
+      right: 0;
+      animation: splitRight 0.5s ease forwards;
+    }
+    .split-left img {
+      left: 0;
+      border-top-left-radius: 15px;
+      border-bottom-left-radius: 15px;
+    }
+    .split-right img {
+      right: 0;
+      border-top-right-radius: 15px;
+      border-bottom-right-radius: 15px;
+    }
+    @keyframes splitLeft {
+      to {
+        transform: translateX(-50px) rotate(-15deg);
+        opacity: 0;
+      }
+    }
+    @keyframes splitRight {
+      to {
+        transform: translateX(50px) rotate(15deg);
+        opacity: 0;
+      }
+    }
+    .trail {
+      position: absolute;
+      width: 10px;
+      height: 10px;
       background: #fff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 1.5rem;
-      color: #ff4d94;
-      text-align: center;
-      padding: 10px;
-    }
-    .photo-container.flipped .front {
-      transform: rotateY(180deg);
-    }
-    .photo-container.flipped .back {
-      transform: rotateY(0deg);
-    }
-    .error {
-      color: #fff;
-      background: rgba(0, 0, 0, 0.5);
-      padding: 5px 10px;
-      border-radius: 5px;
-      font-size: 0.9rem;
-    }
-    @keyframes heartbeat {
-      0%, 100% { transform: scale(1); }
-      20% { transform: scale(1.05); }
-      40% { transform: scale(1); }
-      60% { transform: scale(1.05); }
+      border-radius: 50%;
+      pointer-events: none;
+      opacity: 0.7;
     }
     @media (max-width: 600px) {
       h1 {
         font-size: 2rem;
       }
-      .photo-container {
-        width: 40vw;
-        height: 40vw;
-        max-width: 240px;
-        max-height: 240px;
-        min-width: 200px;
-        min-height: 200px;
+      .score {
+        top: 60px;
+        font-size: 1.5rem;
+      }
+      .game-object, .split-container {
+        width: 80px;
+        height: 80px;
+      }
+      .split-left, .split-right {
+        width: 50%;
+        height: 100%;
+      }
+      .split-left img, .split-right img {
+        width: 200%;
+        height: 100%;
+      }
+      @keyframes splitLeft {
+        to {
+          transform: translateX(-40px) rotate(-15deg);
+          opacity: 0;
+        }
+      }
+      @keyframes splitRight {
+        to {
+          transform: translateX(40px) rotate(15deg);
+          opacity: 0;
+        }
       }
     }
   </style>
 </head>
 <body>
   <h1>李昊天因为太喜欢陈不染了就做了一个网页给她</h1>
-  <div class="photo-wall" id="photoWall"></div>
+  <div class="score" id="score">得分: 0</div>
+  <div class="game-area" id="gameArea"></div>
+  <audio id="cutDurianSound" src="https://cdn.pixabay.com/audio/2023/01/31/audio_3e768a37b0.mp3"></audio>
+  <audio id="cutPhotoSound" src="https://cdn.pixabay.com/audio/2023/01/31/audio_1f5e7a8b2c.mp3"></audio>
 
   <script>
     const photos = [
-      { src: '441747730548_.pic.jpg', text: '一起迎接新未来' },
-      { src: '451747730550_.pic.jpg', text: '和你一起看风景' },
-      { src: '461747730552_.pic.jpg', text: '你是我最亮的星' },
-      { src: '471747730554_.pic.jpg', text: '记录我们的快乐' },
-      { src: '481747730556_.pic.jpg', text: '爱你每一天' },
+      { src: '441747730548_.pic.jpg', type: 'photo' },
+      { src: '451747730550_.pic.jpg', type: 'photo' },
+      { src: '461747730552_.pic.jpg', type: 'photo' },
+      { src: '471747730554_.pic.jpg', type: 'photo' },
+      { src: '481747730556_.pic.jpg', type: 'photo' },
     ];
 
-    const photoWall = document.getElementById('photoWall');
-    const containers = [];
+    const durians = [
+      { src: 'durian.jpg', type: 'durian' },
+    ];
 
-    // 初始化相框
-    photos.forEach((photo, index) => {
-      const container = document.createElement('div');
-      container.className = 'photo-container';
-      const front = document.createElement('div');
-      front.className = 'photo front';
-      const img = document.createElement('img');
-      img.src = photo.src;
-      img.onerror = () => {
-        const errorMsg = document.createElement('div');
-        errorMsg.className = 'error';
-        errorMsg.textContent = `无法加载图片: ${photo.src}`;
-        container.appendChild(errorMsg);
-      };
-      front.appendChild(img);
-      const back = document.createElement('div');
-      back.className = 'photo back';
-      const p = document.createElement('p');
-      p.textContent = photo.text;
-      back.appendChild(p);
-      container.appendChild(front);
-      container.appendChild(back);
-      photoWall.appendChild(container);
+    const gameArea = document.getElementById('gameArea');
+    const scoreDisplay = document.getElementById('score');
+    const cutDurianSound = document.getElementById('cutDurianSound');
+    const cutPhotoSound = document.getElementById('cutPhotoSound');
+    let score = 0;
+    let mouseTrail = [];
+    let isMouseDown = false;
 
-      // 初始化位置和速度
-      container.style.left = Math.random() * (window.innerWidth - 320) + 'px';
-      container.style.top = Math.random() * (window.innerHeight - 320) + 'px';
-      container.velocity = {
-        x: (Math.random() - 0.5) * 2,
-        y: (Math.random() - 0.5) * 2
-      };
-      containers.push(container);
+    // 鼠标拖动轨迹
+    document.addEventListener('mousedown', () => {
+      isMouseDown = true;
     });
-
-    // 鼠标位置
-    let mouseX = 0;
-    let mouseY = 0;
+    document.addEventListener('mouseup', () => {
+      isMouseDown = false;
+      mouseTrail = [];
+    });
     document.addEventListener('mousemove', (e) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
+      if (isMouseDown) {
+        mouseTrail.push({ x: e.clientX, y: e.clientY });
+        if (mouseTrail.length > 10) mouseTrail.shift();
+
+        // 显示拖动轨迹
+        const trail = document.createElement('div');
+        trail.className = 'trail';
+        trail.style.left = e.clientX - 5 + 'px';
+        trail.style.top = e.clientY - 5 + 'px';
+        gameArea.appendChild(trail);
+        setTimeout(() => trail.remove(), 200);
+      }
     });
 
-    // 漂浮和避开逻辑
-    function animate() {
-      containers.forEach(container => {
-        let x = parseFloat(container.style.left);
-        let y = parseFloat(container.style.top);
-        let velX = container.velocity.x;
-        let velY = container.velocity.y;
+    // 生成游戏对象
+    function spawnObject() {
+      // 75%概率生成榴莲，25%概率生成照片
+      const isDurian = Math.random() < 0.75;
+      const objectData = isDurian ? durians[0] : photos[Math.floor(Math.random() * photos.length)];
+      const object = document.createElement('div');
+      object.className = 'game-object';
+      object.dataset.type = objectData.type;
+      const img = document.createElement('img');
+      img.src = objectData.src;
+      img.onerror = () => {
+        img.src = 'https://via.placeholder.com/100/FFD700/000000?text=榴莲';
+      };
+      object.appendChild(img);
+      gameArea.appendChild(object);
 
-        // 计算与鼠标的距离
-        const rect = container.getBoundingClientRect();
+      // 初始位置和速度（放慢）
+      const startX = Math.random() * (window.innerWidth - 100);
+      let x = startX;
+      let y = window.innerHeight;
+      const velocityX = (Math.random() - 0.5) * 2; // 降低水平速度
+      const velocityY = -8 - Math.random() * 3;   // 降低初始上升速度
+      const gravity = 0.2;                        // 降低重力加速度
+
+      function update() {
+        y += velocityY;
+        x += velocityX;
+        object.style.left = x + 'px';
+        object.style.top = y + 'px';
+
+        // 应用重力
+        object.velocityY = (object.velocityY || velocityY) + gravity;
+        y += object.velocityY;
+        x += velocityX;
+
+        // 检测是否被切中
+        const rect = object.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
-        const distX = mouseX - centerX;
-        const distY = mouseY - centerY;
-        const distance = Math.sqrt(distX * distX + distY * distY);
+        let hit = false;
 
-        // 如果鼠标靠近，缓慢避开
-        if (distance < 150) {
-          const force = (150 - distance) / 150 * 2;
-          velX -= distX / distance * force;
-          velY -= distY / distance * force;
+        for (let i = 1; i < mouseTrail.length; i++) {
+          const p1 = mouseTrail[i - 1];
+          const p2 = mouseTrail[i];
+          const dist = pointToLineDistance(centerX, centerY, p1.x, p1.y, p2.x, p2.y);
+          if (dist < 50) {
+            hit = true;
+            break;
+          }
         }
 
-        // 更新位置
-        x += velX;
-        y += velY;
+        if (hit) {
+          // 切开特效
+          const splitContainer = document.createElement('div');
+          splitContainer.className = 'split-container';
+          splitContainer.style.left = x + 'px';
+          splitContainer.style.top = y + 'px';
+          
+          const splitLeft = document.createElement('div');
+          splitLeft.className = 'split-left';
+          const leftImg = document.createElement('img');
+          leftImg.src = objectData.src;
+          splitLeft.appendChild(leftImg);
 
-        // 边界检测
-        if (x <= 0 || x >= window.innerWidth - rect.width) {
-          container.velocity.x = -velX;
-          x = Math.max(0, Math.min(x, window.innerWidth - rect.width));
+          const splitRight = document.createElement('div');
+          splitRight.className = 'split-right';
+          const rightImg = document.createElement('img');
+          rightImg.src = objectData.src;
+          splitRight.appendChild(rightImg);
+
+          gameArea.appendChild(splitContainer);
+          splitContainer.appendChild(splitLeft);
+          splitContainer.appendChild(splitRight);
+
+          // 播放音效并更新分数
+          if (objectData.type === 'durian') {
+            score += 10;
+            cutDurianSound.currentTime = 0;
+            cutDurianSound.play();
+          } else {
+            score -= 20;
+            cutPhotoSound.currentTime = 0;
+            cutPhotoSound.play();
+          }
+          scoreDisplay.textContent = `得分: ${score}`;
+          object.remove();
+          setTimeout(() => splitContainer.remove(), 500);
+          return;
         }
-        if (y <= 0 || y >= window.innerHeight - rect.height) {
-          container.velocity.y = -velY;
-          y = Math.max(0, Math.min(y, window.innerHeight - rect.height));
+
+        // 超出屏幕移除
+        if (y > window.innerHeight || x < -100 || x > window.innerWidth) {
+          object.remove();
+          return;
         }
 
-        container.style.left = x + 'px';
-        container.style.top = y + 'px';
-      });
+        requestAnimationFrame(update);
+      }
 
-      requestAnimationFrame(animate);
+      update();
     }
 
-    // 点击翻转
-    document.querySelectorAll('.photo-container').forEach(container => {
-      container.addEventListener('click', () => {
-        container.classList.toggle('flipped');
-      });
-    });
+    // 计算点到线段的距离
+    function pointToLineDistance(px, py, x1, y1, x2, y2) {
+      const A = px - x1;
+      const B = py - y1;
+      const C = x2 - x1;
+      const D = y2 - y1;
+      const dot = A * C + B * D;
+      const lenSq = C * C + D * D;
+      let param = -1;
+      if (lenSq !== 0) param = dot / lenSq;
 
-    // 开始动画
-    animate();
+      let xx, yy;
+      if (param < 0) {
+        xx = x1;
+        yy = y1;
+      } else if (param > 1) {
+        xx = x2;
+        yy = y2;
+      } else {
+        xx = x1 + param * C;
+        yy = y1 + param * D;
+      }
+
+      const dx = px - xx;
+      const dy = py - yy;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    // 定期生成对象
+    setInterval(spawnObject, 1500 + Math.random() * 1500);
+
+    // 初始生成
+    spawnObject();
   </script>
 </body>
 </html>

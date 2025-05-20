@@ -1,127 +1,219 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>李昊天因为太喜欢陈不染了就做了一个网页给她</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            overflow: hidden;
-            background: linear-gradient(to bottom, #ffe6f0, #ffffff);
-            font-family: Arial, sans-serif;
-            text-align: center;
-        }
-        h1 {
-            color: #ff69b4;
-            margin: 20px 10px;
-            font-size: 2rem;
-            line-height: 1.4;
-        }
-        .frame {
-            position: absolute;
-            width: 15vw; /* 图片宽度为视口宽度的15% */
-            max-width: 200px; /* 最大宽度200px */
-            min-width: 100px; /* 最小宽度100px */
-            height: auto;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transition: transform 0.5s ease; /* 平滑移动 */
-            pointer-events: auto;
-            user-select: none;
-        }
-        @media (max-width: 768px) {
-            .frame {
-                width: 25vw; /* 手机上稍大 */
-                max-width: 150px;
-                min-width: 80px;
-            }
-            h1 {
-                font-size: 1.5rem; /* 手机上标题稍小 */
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>李昊天因为太喜欢陈不染了就做了一个网页给她</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');
+    body {
+      margin: 0;
+      padding: 0;
+      background: url('https://www.transparenttextures.com/patterns/hearts.png'), linear-gradient(135deg, #ff99cc, #ff4d94);
+      background-size: cover, 100%;
+      font-family: 'Dancing Script', cursive;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      position: relative;
+    }
+    h1 {
+      color: #fff;
+      font-size: 3.5rem;
+      text-align: center;
+      margin: 1rem 0;
+      text-shadow: 0 0 10px rgba(255, 77, 148, 0.8), 0 0 20px rgba(255, 153, 204, 0.5);
+      animation: heartbeat 1.2s infinite ease-in-out;
+      z-index: 10;
+    }
+    .photo-wall {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+    }
+    .photo-container {
+      position: absolute;
+      width: 15vw;
+      height: 15vw;
+      max-width: 160px;
+      max-height: 160px;
+      min-width: 120px;
+      min-height: 120px;
+      perspective: 1000px;
+      cursor: pointer;
+    }
+    .photo {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      backface-visibility: hidden;
+      transition: transform 0.6s;
+      border-radius: 20px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    }
+    .front {
+      transform: rotateY(0deg);
+    }
+    .back {
+      transform: rotateY(180deg);
+      background: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.2rem;
+      color: #ff4d94;
+      text-align: center;
+      padding: 10px;
+    }
+    .photo-container.flipped .front {
+      transform: rotateY(180deg);
+    }
+    .photo-container.flipped .back {
+      transform: rotateY(0deg);
+    }
+    .error {
+      color: #fff;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 0.9rem;
+    }
+    @keyframes heartbeat {
+      0%, 100% { transform: scale(1); }
+      20% { transform: scale(1.05); }
+      40% { transform: scale(1); }
+      60% { transform: scale(1.05); }
+    }
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 2rem;
+      }
+      .photo-container {
+        width: 20vw;
+        height: 20vw;
+        max-width: 120px;
+        max-height: 120px;
+        min-width: 100px;
+        min-height: 100px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <h1>李昊天因为太喜欢陈不染了就做了一个网页给她</h1>
-    <img class="frame" src="images/photo-1.jpg" alt="相框1">
-    <img class="frame" src="images/photo-2.jpg" alt="相框2">
-    <img class="frame" src="images/photo-3.jpg" alt="相框3">
-    <img class="frame" src="images/photo-4.jpg" alt="相框4">
-    <img class="frame" src="images/photo-5.jpg" alt="相框5">
+  <h1>李昊天因为太喜欢陈不染了就做了一个网页给她</h1>
+  <div class="photo-wall" id="photoWall"></div>
 
-    <script>
-        const frames = document.querySelectorAll('.frame');
+  <script>
+    const photos = [
+      { src: '441747730548_.pic.jpg', text: '一起迎接新未来' },
+      { src: '451747730550_.pic.jpg', text: '和你一起看风景' },
+      { src: '461747730552_.pic.jpg', text: '你是我最亮的星' },
+      { src: '471747730554_.pic.jpg', text: '记录我们的快乐' },
+      { src: '481747730556_.pic.jpg', text: '爱你每一天' },
+    ];
 
-        // 初始化每个相框的位置和速度
-        frames.forEach(frame => {
-            frame.posX = Math.random() * (window.innerWidth - frame.offsetWidth);
-            frame.posY = Math.random() * (window.innerHeight - frame.offsetHeight);
-            frame.speedX = (Math.random() - 0.5) * 2; // 随机速度 -1 到 1
-            frame.speedY = (Math.random() - 0.5) * 2;
-            frame.style.left = frame.posX + 'px';
-            frame.style.top = frame.posY + 'px';
-        });
+    const photoWall = document.getElementById('photoWall');
+    const containers = [];
 
-        // 动画循环：移动相框并检查边界
-        function animate() {
-            frames.forEach(frame => {
-                frame.posX += frame.speedX;
-                frame.posY += frame.speedY;
+    // 初始化相框
+    photos.forEach((photo, index) => {
+      const container = document.createElement('div');
+      container.className = 'photo-container';
+      const front = document.createElement('div');
+      front.className = 'photo front';
+      const img = document.createElement('img');
+      img.src = photo.src;
+      img.onerror = () => {
+        const errorMsg = document.createElement('div');
+        errorMsg.className = 'error';
+        errorMsg.textContent = `无法加载图片: ${photo.src}`;
+        container.appendChild(errorMsg);
+      };
+      front.appendChild(img);
+      const back = document.createElement('div');
+      back.className = 'photo back';
+      const p = document.createElement('p');
+      p.textContent = photo.text;
+      back.appendChild(p);
+      container.appendChild(front);
+      container.appendChild(back);
+      photoWall.appendChild(container);
 
-                // 边界检查
-                if (frame.posX <= 0 || frame.posX >= window.innerWidth - frame.offsetWidth) {
-                    frame.speedX = -frame.speedX;
-                    frame.posX = Math.max(0, Math.min(frame.posX, window.innerWidth - frame.offsetWidth));
-                }
-                if (frame.posY <= 0 || frame.posY >= window.innerHeight - frame.offsetHeight) {
-                    frame.speedY = -frame.speedY;
-                    frame.posY = Math.max(0, Math.min(frame.posY, window.innerHeight - frame.offsetHeight));
-                }
+      // 初始化位置和速度
+      container.style.left = Math.random() * (window.innerWidth - 160) + 'px';
+      container.style.top = Math.random() * (window.innerHeight - 160) + 'px';
+      container.velocity = {
+        x: (Math.random() - 0.5) * 2,
+        y: (Math.random() - 0.5) * 2
+      };
+      containers.push(container);
+    });
 
-                frame.style.left = frame.posX + 'px';
-                frame.style.top = frame.posY + 'px';
-            });
-            requestAnimationFrame(animate);
+    // 鼠标位置
+    let mouseX = 0;
+    let mouseY = 0;
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    });
+
+    // 漂浮和避开逻辑
+    function animate() {
+      containers.forEach(container => {
+        let x = parseFloat(container.style.left);
+        let y = parseFloat(container.style.top);
+        let velX = container.velocity.x;
+        let velY = container.velocity.y;
+
+        // 计算与鼠标的距离
+        const rect = container.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const distX = mouseX - centerX;
+        const distY = mouseY - centerY;
+        const distance = Math.sqrt(distX * distX + distY * distY);
+
+        // 如果鼠标靠近，缓慢避开
+        if (distance < 150) {
+          const force = (150 - distance) / 150 * 2;
+          velX -= distX / distance * force;
+          velY -= distY / distance * force;
         }
-        animate();
 
-        // 鼠标交互：相框避开鼠标
-        document.addEventListener('mousemove', e => {
-            const mouseX = e.clientX;
-            const mouseY = e.clientY;
+        // 更新位置
+        x += velX;
+        y += velY;
 
-            frames.forEach(frame => {
-                const rect = frame.getBoundingClientRect();
-                const frameX = rect.left + rect.width / 2;
-                const frameY = rect.top + rect.height / 2;
+        // 边界检测
+        if (x <= 0 || x >= window.innerWidth - rect.width) {
+          container.velocity.x = -velX;
+          x = Math.max(0, Math.min(x, window.innerWidth - rect.width));
+        }
+        if (y <= 0 || y >= window.innerHeight - rect.height) {
+          container.velocity.y = -velY;
+          y = Math.max(0, Math.min(y, window.innerHeight - rect.height));
+        }
 
-                // 计算鼠标与相框中心的距离
-                const dx = mouseX - frameX;
-                const dy = mouseY - frameY;
-                const distance = Math.sqrt(dx * dx + dy * dy);
+        container.style.left = x + 'px';
+        container.style.top = y + 'px';
+      });
 
-                // 如果鼠标靠近（距离<150px），相框缓慢避开
-                if (distance < 150) {
-                    const angle = Math.atan2(dy, dx);
-                    const push = (150 - distance) / 150 * 5; // 推力强度
-                    frame.speedX -= Math.cos(angle) * push * 0.05;
-                    frame.speedY -= Math.sin(angle) * push * 0.05;
-                }
-            });
-        });
+      requestAnimationFrame(animate);
+    }
 
-        // 自适应窗口大小变化
-        window.addEventListener('resize', () => {
-            frames.forEach(frame => {
-                frame.posX = Math.min(frame.posX, window.innerWidth - frame.offsetWidth);
-                frame.posY = Math.min(frame.posY, window.innerHeight - frame.offsetHeight);
-                frame.style.left = frame.posX + 'px';
-                frame.style.top = frame.posY + 'px';
-            });
-        });
-    </script>
+    // 点击翻转
+    document.querySelectorAll('.photo-container').forEach(container => {
+      container.addEventListener('click', () => {
+        container.classList.toggle('flipped');
+      });
+    });
+
+    // 开始动画
+    animate();
+  </script>
 </body>
 </html>
